@@ -17,11 +17,11 @@ class Args(object):
             tmplist = []
             for i in ['-c','-d','-o']:
                 index = self.args.index(i)
-                tmplist = tmplist.append(self.args[index + 1])
+                tmplist.append(self.args[index + 1])
 
             return tmplist
         else:
-            raise Exception
+            raise TypeError
 
 
 class Config(object):
@@ -31,8 +31,10 @@ class Config(object):
     def _read_config(self):
         config = {}
         with open(Args().getdir()[0]) as cfgfile:
-            for i in range(8):
+            while True:
                 oneline = cfgfile.readline()
+                if oneline == '':
+                    break
                 tmplist = oneline.strip().split('=')
                 try:
                     config[tmplist[0]] = tmplist[1]
@@ -56,7 +58,7 @@ class UserData(object):
                 opaline = usrfile.readline()
                 titlist = opaline.strip().split(',')
                 try:
-                    userdata[i] = (titlist[0],titlist[1])
+                    userdata.append((titlist[0],titlist[1]))
                 except Exception:
                     raise ValueError
         return userdata
@@ -70,19 +72,19 @@ class IncomeTaxCalculator(object):
 
     def calc_for_all_userdata(self):
 
-        realist = [[],[],[]]
+        realist = []
+        tmplist = []
 
 
-        count = 0
         for userid,wages in UserData().get_userdata():
-            realist = realist[count].append(userid)
-            realist = realist[count].append(wages)
-            realist = realist[count].append(format(self.shebao(wages),'.2f'))
-            realist = realist[count].append(format(self.geshui(wages),'.2f'))
-            realist = realist[count].append(wages - format(self.shebao(wages),'.2f') -format(self.geshui(wages),'.2f'))
-            count += 1
+            realist.append(userid)
+            realist.append(wages)
+            realist.append(format(self.shebao(int(wages)),'.2f'))
+            realist.append(format(self.geshui(int(wages)),'.2f'))
+            realist.append(float(wages) - float(format(self.shebao(int(wages)),'.2f')) - float(format(self.geshui(int(wages)),'.2f')))
+            tmplist.append(realist)
 
-        return realist
+        return tmplist
 
     def shebao(self,wages):
         alleen = float(Config().get_config('YangLao')) + float(Config().get_config('YiLiao')) \
@@ -98,7 +100,7 @@ class IncomeTaxCalculator(object):
 
 
     def geshui(self,wages):
-        leftwages = wages - self.shebao(wages)
+        leftwages = wages - self.shebao(wages) - 3500
 
         if leftwages <= 0:
             return 0
@@ -120,7 +122,7 @@ class IncomeTaxCalculator(object):
 
     def export(self, default='csv'):
         result = self.calc_for_all_userdata()
-        with open(Args().getdir()[2]) as f:
+        with open(Args().getdir()[2],'w') as f:
             writer = csv.writer(f)
             writer.writerows(result)
 
