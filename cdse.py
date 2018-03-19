@@ -6,6 +6,7 @@
 '''
 import sys
 import csv
+import configparser
 from multiprocessing import Process, Queue
 
 
@@ -27,24 +28,36 @@ class Args(object):
 
 
 class Config(object):
-    def __init__(self):
+    def __init__(self,city):
+        self.cfg = configparser.ConfigParser()
+        self.city = city
         self.config = self._read_config()
 
     def _read_config(self):
         config = {}
-        with open(Args().getdir()[0]) as cfgfile:
-            while True:
-                oneline = cfgfile.readline()
-                if oneline == '':
-                    break
-                tmplist = oneline.strip().replace(' ','').split('=')
-                try:
-                    config[tmplist[0]] = tmplist[1]
-                except Exception:
-                    raise ValueError
+        # with open(Args().getdir()[0]) as cfgfile:
+        #     while True:
+        #         oneline = cfgfile.readline()
+        #         if oneline == '':
+        #             break
+        #         tmplist = oneline.strip().replace(' ','').split('=')
+        #         try:
+        #             config[tmplist[0]] = tmplist[1]
+        #         except Exception:
+        #             raise ValueError
+        # return config
+
+        self.cfg.read("",encoding="utf-8")
+        try:
+            for k,v in self.cfg.items(self.city):
+                config[k] = v
+        except Exception:
+            raise ValueError
         return config
 
+
     def get_config(self,key):
+
         return self.config[key]
 
 
