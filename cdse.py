@@ -3,10 +3,11 @@
 ./calculator.py -c /home/shiyanlou/test.cfg
 -d /home/shiyanlou/user.csv -o /tmp/gongzi.csv
 
-
 '''
 import sys
 import csv
+from multiprocessing import Process, Queue
+
 
 
 class Args(object):
@@ -66,7 +67,8 @@ class UserData(object):
                 except Exception:
                     raise ValueError
 
-        return userdata
+        que1.put(userdata)
+        # return userdata
 
     def get_userdata(self):
         return self.userdata
@@ -81,7 +83,7 @@ class IncomeTaxCalculator(object):
         tmplist = []
 
 
-        for userid,wages in UserData().get_userdata():
+        for userid,wages in que1.get():
             realist = []
             realist.append(userid)
             realist.append(wages)
@@ -90,8 +92,9 @@ class IncomeTaxCalculator(object):
             realist.append(format(float(wages) - float(format(self.shebao(int(wages)),'.2f')) - \
                             float(self.geshui(int(wages))),'.2f'))
             tmplist.append(realist)
-        print(tmplist)
-        return tmplist
+        # print(tmplist)
+        que2.put(tmplist)
+        # return tmplist
 
     def shebao(self,wages):
         alleen = float(Config().get_config('YangLao')) + float(Config().get_config('YiLiao')) \
@@ -128,11 +131,17 @@ class IncomeTaxCalculator(object):
 
 
     def export(self, default='csv'):
-        result = self.calc_for_all_userdata()
+        result = que2.get()
         with open(Args().getdir()[2],'w') as f:
             writer = csv.writer(f)
             writer.writerows(result)
 
 
 if __name__ == '__main__':
-    IncomeTaxCalculator().export()
+
+    que1 = Queue()
+    que2 = Queue()
+
+    Process(target=UserData().get_userdata()).start()
+    Process(target=IncomeTaxCalculator().calc_for_all_userdata()).start()
+    Process(target=IncomeTaxCalculator().export()).start()
