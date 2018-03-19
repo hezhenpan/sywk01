@@ -1,11 +1,12 @@
-# *_*coding:utf-8 *_*
+#!/usr/bin/env python3
 '''
 ./calculator.py -c /home/shiyanlou/test.cfg
 -d /home/shiyanlou/user.csv -o /tmp/gongzi.csv
 
 
 '''
-import sys, csv
+import sys
+import csv
 
 
 class Args(object):
@@ -35,7 +36,7 @@ class Config(object):
                 oneline = cfgfile.readline()
                 if oneline == '':
                     break
-                tmplist = oneline.strip().split('=')
+                tmplist = oneline.strip().replace(' ','').split('=')
                 try:
                     config[tmplist[0]] = tmplist[1]
                 except Exception:
@@ -54,13 +55,17 @@ class UserData(object):
     def _read_users_data(self):
         userdata = []
         with open(Args().getdir()[1]) as usrfile:
-            for i in range(8):
+            while True:
                 opaline = usrfile.readline()
-                titlist = opaline.strip().split(',')
+                if opaline == '':
+                    break
+                titlist = opaline.strip().replace(' ','').split(',')
+
                 try:
                     userdata.append((titlist[0],titlist[1]))
                 except Exception:
                     raise ValueError
+
         return userdata
 
     def get_userdata(self):
@@ -72,18 +77,20 @@ class IncomeTaxCalculator(object):
 
     def calc_for_all_userdata(self):
 
-        realist = []
+
         tmplist = []
 
 
         for userid,wages in UserData().get_userdata():
+            realist = []
             realist.append(userid)
             realist.append(wages)
             realist.append(format(self.shebao(int(wages)),'.2f'))
-            realist.append(format(self.geshui(int(wages)),'.2f'))
-            realist.append(float(wages) - float(format(self.shebao(int(wages)),'.2f')) - float(format(self.geshui(int(wages)),'.2f')))
+            realist.append(self.geshui(int(wages)))
+            realist.append(format(float(wages) - float(format(self.shebao(int(wages)),'.2f')) - \
+                            float(self.geshui(int(wages))),'.2f'))
             tmplist.append(realist)
-
+        print(tmplist)
         return tmplist
 
     def shebao(self,wages):
@@ -103,7 +110,7 @@ class IncomeTaxCalculator(object):
         leftwages = wages - self.shebao(wages) - 3500
 
         if leftwages <= 0:
-            return 0
+            return format(0, '.2f')
         elif 0 < leftwages <= 1500:
             return format(leftwages * 0.03, '.2f')
         elif 1500 < leftwages <= 4500:
