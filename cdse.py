@@ -28,7 +28,7 @@ class Args(object):
     #         raise TypeError
 
     def getdir(self):
-        dirlist = []
+        dirlist = ['','','','']
         try:
             opts, args = getopt.getopt(self.args, "hC:c:d:o:", [])
         except getopt.GetoptError:
@@ -40,13 +40,13 @@ class Args(object):
                 print('Usage: calculator.py -C cityname -c configfile -d userdata -o resultdata')
                 sys.exit()
             elif opt == '-c':
-                dirlist.append(arg)
+                dirlist[0] = arg
             elif opt == '-d':
-                dirlist.append(arg)
+                dirlist[1] = arg
             elif opt == '-o':
-                dirlist.append(arg)
+                dirlist[2] = arg
             elif opt == '-C':
-                dirlist.append(arg)
+                dirlist[3] = arg
 
         return dirlist
 
@@ -54,7 +54,7 @@ class Args(object):
 class Config(object):
     def __init__(self):
         self.cfg = configparser.ConfigParser()
-        self.city = Args().getdir()[3]
+        self.city = Args().getdir()[3].lower()
         self.config = self._read_config()
 
     def _read_config(self):
@@ -71,7 +71,7 @@ class Config(object):
         #             raise ValueError
         # return config
 
-        self.cfg.read("", encoding="utf-8")
+        self.cfg.read(Args().getdir()[0], encoding="utf-8")
         try:
             for k, v in self.cfg.items(self.city):
                 config[k] = v
@@ -80,7 +80,7 @@ class Config(object):
         return config
 
     def get_config(self, key):
-
+        key = key.lower()
         return self.config[key]
 
 
@@ -96,6 +96,7 @@ class UserData(object):
                 if opaline == '':
                     break
                 titlist = opaline.strip().replace(' ', '').split(',')
+
 
                 try:
                     userdata.append((titlist[0], titlist[1]))
