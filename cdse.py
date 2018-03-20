@@ -30,7 +30,7 @@ class Args(object):
     def getdir(self):
         dirlist = []
         try:
-            opts, args = getopt.getopt(self.args, "hc:d:o:", [])
+            opts, args = getopt.getopt(self.args, "hC:c:d:o:", [])
         except getopt.GetoptError:
             print('参数格式错误')
             sys.exit(2)
