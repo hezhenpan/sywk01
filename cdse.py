@@ -8,8 +8,8 @@ import sys
 import csv
 import configparser
 import getopt
+from datetime import datetime
 from multiprocessing import Process, Queue
-
 
 
 class Args(object):
@@ -30,12 +30,12 @@ class Args(object):
     def getdir(self):
         dirlist = []
         try:
-            opts,args = getopt.getopt(self.args,"hc:d:o:",[])
+            opts, args = getopt.getopt(self.args, "hc:d:o:", [])
         except getopt.GetoptError:
             print('参数格式错误')
             sys.exit(2)
 
-        for opt,arg in opts:
+        for opt, arg in opts:
             if opt == '-h':
                 print('Usage: calculator.py -C cityname -c configfile -d userdata -o resultdata')
                 sys.exit()
@@ -49,6 +49,7 @@ class Args(object):
                 dirlist.append(arg)
 
         return dirlist
+
 
 class Config(object):
     def __init__(self):
@@ -70,19 +71,17 @@ class Config(object):
         #             raise ValueError
         # return config
 
-        self.cfg.read("",encoding="utf-8")
+        self.cfg.read("", encoding="utf-8")
         try:
-            for k,v in self.cfg.items(self.city):
+            for k, v in self.cfg.items(self.city):
                 config[k] = v
         except Exception:
             raise ValueError
         return config
 
-
-    def get_config(self,key):
+    def get_config(self, key):
 
         return self.config[key]
-
 
 
 class UserData(object):
@@ -96,10 +95,10 @@ class UserData(object):
                 opaline = usrfile.readline()
                 if opaline == '':
                     break
-                titlist = opaline.strip().replace(' ','').split(',')
+                titlist = opaline.strip().replace(' ', '').split(',')
 
                 try:
-                    userdata.append((titlist[0],titlist[1]))
+                    userdata.append((titlist[0], titlist[1]))
                 except Exception:
                     raise ValueError
 
@@ -110,42 +109,38 @@ class UserData(object):
         return self.userdata
 
 
-
 class IncomeTaxCalculator(object):
-
     def calc_for_all_userdata(self):
-
 
         tmplist = []
 
-
-        for userid,wages in que1.get():
+        for userid, wages in que1.get():
             realist = []
             realist.append(userid)
             realist.append(wages)
-            realist.append(format(self.shebao(int(wages)),'.2f'))
+            realist.append(format(self.shebao(int(wages)), '.2f'))
             realist.append(self.geshui(int(wages)))
-            realist.append(format(float(wages) - float(format(self.shebao(int(wages)),'.2f')) - \
-                            float(self.geshui(int(wages))),'.2f'))
+            realist.append(format(float(wages) - float(format(self.shebao(int(wages)), '.2f')) - \
+                                  float(self.geshui(int(wages))), '.2f'))
+            realist.append(datetime.strftime(datetime.now(),'%Y-%m-%d %H:%M:%S'))
             tmplist.append(realist)
         # print(tmplist)
         que2.put(tmplist)
         # return tmplist
 
-    def shebao(self,wages):
+    def shebao(self, wages):
         alleen = float(Config().get_config('YangLao')) + float(Config().get_config('YiLiao')) \
                  + float(Config().get_config('ShiYe')) + float(Config().get_config('GongShang')) \
                  + float(Config().get_config('ShengYu')) + float(Config().get_config('GongJiJin'))
 
         if wages <= float(Config().get_config('JiShuL')):
-            return float(Config().get_config('JiShuL'))*alleen
+            return float(Config().get_config('JiShuL')) * alleen
         elif float(Config().get_config('JiShuL')) < wages <= float(Config().get_config('JiShuH')):
-            return wages*alleen
+            return wages * alleen
         elif wages >= float(Config().get_config('JiShuH')):
             return float(Config().get_config('JiShuH')) * alleen
 
-
-    def geshui(self,wages):
+    def geshui(self, wages):
         leftwages = wages - self.shebao(wages) - 3500
 
         if leftwages <= 0:
@@ -165,16 +160,14 @@ class IncomeTaxCalculator(object):
         elif 80000 < leftwages:
             return (format(leftwages * 0.45 - 13505, '.2f'))
 
-
     def export(self, default='csv'):
         result = que2.get()
-        with open(Args().getdir()[2],'w') as f:
+        with open(Args().getdir()[2], 'w') as f:
             writer = csv.writer(f)
             writer.writerows(result)
 
 
 if __name__ == '__main__':
-
     que1 = Queue()
     que2 = Queue()
 
