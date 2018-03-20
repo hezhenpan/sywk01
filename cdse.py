@@ -7,6 +7,7 @@
 import sys
 import csv
 import configparser
+import getopt
 from multiprocessing import Process, Queue
 
 
@@ -15,22 +16,44 @@ class Args(object):
     def __init__(self):
         self.args = sys.argv[1:]
 
+    # def getdir(self):
+    #     if {'-c', '-d', '-o'}.issubset(self.args):
+    #         tmplist = []
+    #         for i in ['-c','-d','-o']:
+    #             index = self.args.index(i)
+    #             tmplist.append(self.args[index + 1])
+    #
+    #         return tmplist
+    #     else:
+    #         raise TypeError
+
     def getdir(self):
-        if {'-c', '-d', '-o'}.issubset(self.args):
-            tmplist = []
-            for i in ['-c','-d','-o']:
-                index = self.args.index(i)
-                tmplist.append(self.args[index + 1])
+        dirlist = []
+        try:
+            opts,args = getopt.getopt(self.args,"hc:d:o:",[])
+        except getopt.GetoptError:
+            print('参数格式错误')
+            sys.exit(2)
 
-            return tmplist
-        else:
-            raise TypeError
+        for opt,arg in opts:
+            if opt == '-h':
+                print('Usage: calculator.py -C cityname -c configfile -d userdata -o resultdata')
+                sys.exit()
+            elif opt == '-c':
+                dirlist.append(arg)
+            elif opt == '-d':
+                dirlist.append(arg)
+            elif opt == '-o':
+                dirlist.append(arg)
+            elif opt == '-C':
+                dirlist.append(arg)
 
+        return dirlist
 
 class Config(object):
-    def __init__(self,city):
+    def __init__(self):
         self.cfg = configparser.ConfigParser()
-        self.city = city
+        self.city = Args().getdir()[3]
         self.config = self._read_config()
 
     def _read_config(self):
