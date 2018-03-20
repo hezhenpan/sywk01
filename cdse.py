@@ -54,7 +54,7 @@ class Args(object):
 class Config(object):
     def __init__(self):
         self.cfg = configparser.ConfigParser()
-        self.city = Args().getdir()[3].lower()
+        self.city = Args().getdir()[3].upper()
         self.config = self._read_config()
 
     def _read_config(self):
